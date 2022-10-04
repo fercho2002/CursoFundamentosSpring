@@ -24,4 +24,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select u from User u where u.nombre like ?1%")
     List<User> buscarOrdenar(String name, Sort sort);
 
+
+    //con este findBy(nomre de lcampo que voy a filtrar) con eso tambien puedo hacer una consulta hay puedo cambiar la palabra nombre por id o email y me retorna una lista de los que encuentre
+     List<User> findBynombre(String name);
+
+
+     Optional<User> findBynombreAndEmail(String name,String email);
+
+
 }

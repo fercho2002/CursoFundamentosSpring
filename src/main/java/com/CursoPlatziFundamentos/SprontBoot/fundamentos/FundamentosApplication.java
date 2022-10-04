@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @SpringBootApplication
@@ -67,7 +68,33 @@ public class FundamentosApplication implements CommandLineRunner {
 		userRepository.buscarOrdenar("fer", Sort.by("id").descending()).forEach(u -> logger.info("@este es el like jaja " + u));
 
 
+		//llamo ese metodo y con el .stream lo movierto la respuesta a stream y con el for each lo imprimo jaja
+		userRepository.findBynombre("ernando").stream().forEach(u -> logger.info("@esta es una prueba con el find "+u));
+
+	    // este metodo el que va despues del AND es otro campo pero toca la primera en mayuscula osino no reconoce el campo y este busca solo si hay la coincidencia de nombre y email
+		/*
+		logger.info("@prueba con el metodo findBynombreANdemail "+userRepository.findBynombreAndEmail("fernando4","fercho8@gamil.com").orElseThrow(()->new RuntimeException("no se encntro por ese nombre y amellido ")));
+		*/
+		//cuando hay una exception de la forma que esta aqui arriva no me funciona porque detiene todo el flujo
+		//aqui abajo voy a probar con try y catch
+
+		//este try creo que solo me va a funcionar si es una lista por que este optional si la respuesta no devuelve nada
+		// igual me guarda ese null estonces nunca va a entrar al catch por eso use el if y con ese si puedo validar si eso esta vacio
+		try{
+			Optional a;
+			logger.info("@prueba con el metodo findBynombreANdemail "+userRepository.findBynombreAndEmail("fernando4","fercho8@gamil.com"));
+			a = userRepository.findBynombreAndEmail("fernando4","fercho8@gamil.com");
+
+			// si entra a este if es por que no encontro el nombre o el email, eso deben ser los mismo para un registro
+			if(a.isEmpty()){
+				logger.info("@@@eso esta vacio jaja ");
+			}
+		}catch (Exception e ){
+			logger.info("@ salio un error a buscar por nombre and email este es el error : "+e);
+		}
+
 	}
+
 
 
 
