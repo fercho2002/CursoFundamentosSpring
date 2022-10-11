@@ -5,8 +5,11 @@ import com.CursoPlatziFundamentos.SprontBoot.fundamentos.bean.MyBean;
 import com.CursoPlatziFundamentos.SprontBoot.fundamentos.bean.MyBeanWithDependency;
 import com.CursoPlatziFundamentos.SprontBoot.fundamentos.bean.MyBeanWithRandom;
 import com.CursoPlatziFundamentos.SprontBoot.fundamentos.component.ComponentDependency;
+import com.CursoPlatziFundamentos.SprontBoot.fundamentos.dto.UserDTO;
 import com.CursoPlatziFundamentos.SprontBoot.fundamentos.entity.User;
 import com.CursoPlatziFundamentos.SprontBoot.fundamentos.repository.UserRepository;
+import com.CursoPlatziFundamentos.SprontBoot.fundamentos.service.UserService;
+import net.bytebuddy.asm.Advice;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,6 +27,8 @@ import java.util.logging.Logger;
 @SpringBootApplication
 public class FundamentosApplication implements CommandLineRunner {
 
+
+	//este LOG es de apache y lo uso para mostrar los log pueden ser mensajes o errores entre otros por ahi abajo los utilizo jaja
 	private Log logger = LogFactory.getLog(FundamentosApplication.class);
 	private ComponentDependency componentDependency;
 	private MyBean myBean;
@@ -31,24 +36,28 @@ public class FundamentosApplication implements CommandLineRunner {
 	private MyBeanWithRandom myBeanWithRandom;
 	private UserPojo userPojo;
 	private UserRepository userRepository;
+	private UserService userService;
 
-	public FundamentosApplication(@Qualifier("componentImplentTwo") ComponentDependency componentDependency,MyBean myBean,MyBeanWithDependency myBeanWithDependency,MyBeanWithRandom myBeanWithRandom,UserPojo userPojo,UserRepository userRepository){
+	public FundamentosApplication(@Qualifier("componentImplentTwo") ComponentDependency componentDependency,MyBean myBean,MyBeanWithDependency myBeanWithDependency,MyBeanWithRandom myBeanWithRandom,UserPojo userPojo,UserRepository userRepository,UserService userService){
 		this.componentDependency = componentDependency;
 		this.myBean = myBean;
 		this.myBeanWithDependency = myBeanWithDependency;
 		this.userRepository = userRepository;
 		this.myBeanWithRandom = myBeanWithRandom;
 		this.userPojo = userPojo;
+		this.userService = userService;
 	}
 	public static void main(String[] args) {
 		SpringApplication.run(FundamentosApplication.class, args);
 	}
 
+	// este metodo es lo que se va a ejecutar cuando yo le de run al programa
 	@Override
 	public void run(String... args) throws Exception {
 			//ejemplosDeAntes();
 			saveUserInDb();
 			getInformatioJPQLFromUser();
+			saveResultsTransactional();
 
 	}
 	private void getInformatioJPQLFromUser(){
@@ -93,10 +102,60 @@ public class FundamentosApplication implements CommandLineRunner {
 			logger.info("@ salio un error a buscar por nombre and email este es el error : "+e);
 		}
 
+
+		//como es con like lo paso desde aqui de una vez con el %%
+		userRepository.findBynombreLike("%fer%").forEach(u -> logger.info("este es con el like jaja "+u));
+
+
+
+		// con este puedo pasar el email o el nombre y el me busca por cualquiera de los dos
+		userRepository.findBynombreOrEmail("","fercho@gamil.com").forEach(u -> logger.info("este es con el Or jaja "+u));
+
+
+
+		// con este lo que hago es que busco los usuarios pero si estan entre las fecha que les envie el campo birtdate
+
+		//aqui abajo puse el 30 y entonces en un intervalo abierto toma los dos exptremos
+		userRepository.findBybithdateBetween(LocalDate.of(2022,06,1),LocalDate.of(2022,07,31)).forEach(u->logger.info("esta fecha entre y hasta "+u));
+
+		// si coincide el name con el like me los imprime pero en orden diferente
+		userRepository.findByNombreLikeOrderByIdDesc("%ferna%").forEach(u -> logger.info("este ele por orderby id "+u));
+
+
+		// si coincide el name con el like me los imprime pero en orden diferente
+		userRepository.findByNombreContainingOrderByIdDesc("ferna").forEach(u -> logger.info("este ele por orderby id y el contain  "+u));
+
+
+		// si coinciden ambos me trae el resultado en forma de dto la clase, pero si no lo encuentra no se va por el else  no se por que jaja tocari probar con try an catch
+		List<UserDTO> a;
+		a=userRepository.EncontrarPorParametrosYelDTO(LocalDate.of(2022,9,30),"fercho@gamil.com");
+		if(a!=null) {
+			a.forEach(u -> logger.info("@esto es con el @parametroyDTO" + u));
+		}else {
+			logger.info("No se encontro nada con la consulta talves esos datos no estan en la base de datos ");
+		}
+
+		}
+
+
+
+
+
+	private void saveResultsTransactional(){
+		User test1 = new User("test1","tes1@gmail.com",LocalDate.of(2022,1,1));
+		User test2 = new User("test2","tes2@gmail.com",LocalDate.of(2022,1,1));
+		User test3 = new User("test3","tes3@gmail.com",LocalDate.of(2022,1,1));
+		User test4 = new User("test4","tes4@gmail.com",LocalDate.of(2022,1,1));
+		List<User> u = Arrays.asList(test1,test2,test3,test4);
+		try {
+			//si llego a enviar un email repetido el no me va a insertar ninguno en la base de datos por que tiene la eticketa transacional entonces si alguno falla no insertada nada el la clase UserService
+			userService.saveTransaciones(u);
+		}catch (Exception e ){
+			logger.info("@@@ se presento un error al insetar los datos en la base de datos haci que dibo hacer rollback con el transactional y no insertar ninguno jaja ");
+		}
+		userService.todosLosUsuarios().forEach(user->logger.info("este es el usuario transacional = "+user));
+
 	}
-
-
-
 
 	private void saveUserInDb(){
 		User user1 = new User("ernando","fercho@gamil.com", LocalDate.of(2022,9,30));
