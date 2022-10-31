@@ -4,9 +4,12 @@ import com.CursoPlatziFundamentos.SprontBoot.fundamentos.entity.User;
 import com.CursoPlatziFundamentos.SprontBoot.fundamentos.repository.UserRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -32,4 +35,28 @@ public class UserService {
     public List<User> todosLosUsuarios(){
         return userRepository.findAll();
     }
+
+    public User save(User bodi) {
+        return userRepository.save(bodi);
+    }
+
+    public void delete(Long id) {
+        userRepository.delete(new User(id));
+    }
+
+    public User modificar(User bod, Long id) {
+
+        //qui abajo lo que ago es primero consultar ese usuario por el metoso findById que es el id que traigo en variable
+        //desde el @putmaping entonces con el .map miro si lo encuentra y si lo hace guardo eso en la landa
+        // user y ya con eso despues la guardo. siempre es importande abajo poner el .get porque ese findbyid es un optional
+        return
+        userRepository.findById(id).map(user -> {
+            user.setBithdate(bod.getBithdate());
+            user.setEmail(bod.getEmail());
+            user.setNombre(bod.getNombre());
+            return userRepository.save(user);
+
+        }).get();
+    }
+
 }

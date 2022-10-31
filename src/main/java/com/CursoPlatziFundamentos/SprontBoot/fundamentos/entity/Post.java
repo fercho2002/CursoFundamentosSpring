@@ -1,6 +1,9 @@
 package com.CursoPlatziFundamentos.SprontBoot.fundamentos.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
 
 @Entity
@@ -19,6 +22,8 @@ public class Post {
 
     //con esta etiqueta estamos diciento que a esta entidad un user la puede llamar varias veces
     @ManyToOne
+    /*esta de aqui abajo me toca investigarla por que si no la pongo y consumo el servicio post me sale un error de que no soprta json jaaj       */
+    @JsonBackReference
     private User user;
 
     public Post() {

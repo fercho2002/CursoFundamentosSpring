@@ -43,6 +43,10 @@ public class User {
         this.bithdate = bithdate;
     }
 
+    public User(Long id) {
+        this.id = id;
+    }
+
     public Long getId() {
         return id;
     }
